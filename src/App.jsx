@@ -10,11 +10,10 @@ const FireCanvas = () => {
     const ctx = canvas.getContext('2d');
     let animationFrameId;
 
-    // Detectamos si es pantalla móvil para optimizar el rendimiento
     const isMobile = window.innerWidth < 768;
-    const MAX_FLAMES = isMobile ? 400 : 1100; // Menos llamas en celulares
-    const MAX_EMBERS = isMobile ? 150 : 450;  // Menos chispas en celulares
-    const SPAWN_RATE = isMobile ? 0.8 : 1.6;  // Nacen menos partículas por segundo en móviles
+    const MAX_FLAMES = isMobile ? 350 : 1100; 
+    const MAX_EMBERS = isMobile ? 120 : 450;  
+    const SPAWN_RATE = isMobile ? 0.7 : 1.6;  
 
     const resize = () => {
       canvas.width = canvas.offsetWidth;
@@ -22,6 +21,52 @@ const FireCanvas = () => {
     };
     resize();
     window.addEventListener('resize', resize);
+
+    // --- INICIO OPTIMIZACIÓN: PRE-RENDER DE SPRITES ---
+    // En lugar de calcular gradientes frame por frame, creamos 4 "fotos" del fuego.
+    const createSprite = (type) => {
+      const cvs = document.createElement('canvas');
+      const size = 64; 
+      cvs.width = size;
+      cvs.height = size;
+      const c = cvs.getContext('2d');
+      const r = size / 2;
+      const g = c.createRadialGradient(r, r, 0, r, r, r);
+
+      if (type === 'core') {
+        g.addColorStop(0, 'rgba(255,255,215,1)');
+        g.addColorStop(0.15, 'rgba(255,245,110,0.9)');
+        g.addColorStop(0.38, 'rgba(255,155,15,0.7)');
+        g.addColorStop(0.65, 'rgba(205,45,0,0.5)');
+        g.addColorStop(1, 'rgba(100,5,0,0)');
+      } else if (type === 'base') {
+        g.addColorStop(0, 'rgba(255,175,25,0.8)');
+        g.addColorStop(0.28, 'rgba(255,95,0,0.7)');
+        g.addColorStop(0.58, 'rgba(185,28,0,0.5)');
+        g.addColorStop(1, 'rgba(75,5,0,0)');
+      } else if (type === 'dark') {
+        g.addColorStop(0, 'rgba(220,70,0,0.7)');
+        g.addColorStop(0.42, 'rgba(150,18,0,0.5)');
+        g.addColorStop(1, 'rgba(40,0,0,0)');
+      } else { // ember (chispa)
+        g.addColorStop(0, 'rgba(255,210,55,0.8)');
+        g.addColorStop(0.45, 'rgba(255,115,0,0.3)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+      }
+
+      c.fillStyle = g;
+      c.beginPath();
+      c.arc(r, r, r, 0, Math.PI * 2);
+      c.fill();
+      return cvs;
+    };
+
+    // Guardamos las imágenes en memoria
+    const coreSprite = createSprite('core');
+    const baseSprite = createSprite('base');
+    const darkSprite = createSprite('dark');
+    const emberSprite = createSprite('ember');
+    // --- FIN OPTIMIZACIÓN ---
 
     let flames = [];
     let embers = [];
@@ -56,7 +101,8 @@ const FireCanvas = () => {
         vy: Math.sin(ang) * spd - 0.4,
         life: 1, decay: 0.0022 + Math.random() * 0.0058,
         size: 0.7 + Math.random() * 2.3, bright: Math.random() < 0.55,
-        tx: (Math.random() - 0.5) * 0.055
+        tx: (Math.random() - 0.5) * 0.055,
+        colorRg: Math.floor(120 + Math.random() * 100) // Fijamos color para evitar calcular math.random en cada frame
       };
     };
 
@@ -80,44 +126,29 @@ const FireCanvas = () => {
       const cy = p.y;
       const r = p.size * p.life * 1.2;
       if (r < 0.5) return;
-      const a = p.life;
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      if (p.core) {
-        g.addColorStop(0,    `rgba(255,255,215,${(a * 0.95).toFixed(2)})`);
-        g.addColorStop(0.15, `rgba(255,245,110,${(a * 0.88).toFixed(2)})`);
-        g.addColorStop(0.38, `rgba(255,155,15,${(a * 0.76).toFixed(2)})`);
-        g.addColorStop(0.65, `rgba(205,45,0,${(a * 0.52).toFixed(2)})`);
-        g.addColorStop(1,    'rgba(100,5,0,0)');
-      } else if (a > 0.55) {
-        g.addColorStop(0,    `rgba(255,175,25,${(a * 0.80).toFixed(2)})`);
-        g.addColorStop(0.28, `rgba(255,95,0,${(a * 0.72).toFixed(2)})`);
-        g.addColorStop(0.58, `rgba(185,28,0,${(a * 0.54).toFixed(2)})`);
-        g.addColorStop(1,    'rgba(75,5,0,0)');
-      } else {
-        g.addColorStop(0,    `rgba(220,70,0,${(a * 0.68).toFixed(2)})`);
-        g.addColorStop(0.42, `rgba(150,18,0,${(a * 0.46).toFixed(2)})`);
-        g.addColorStop(1,    'rgba(40,0,0,0)');
-      }
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = g;
-      ctx.fill();
+
+      // Se usa la imagen pre-renderizada (GPU puro, extremadamente rápido)
+      ctx.globalAlpha = p.life;
+      let sprite = darkSprite;
+      if (p.core) sprite = coreSprite;
+      else if (p.life > 0.55) sprite = baseSprite;
+
+      ctx.drawImage(sprite, cx - r, cy - r, r * 2, r * 2);
     };
 
     const drawEmber = (e) => {
       const a = e.life;
+      ctx.globalAlpha = a;
+
       if (e.bright) {
         const hr = e.size * 5.5;
-        const hg = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, hr);
-        hg.addColorStop(0,   `rgba(255,210,55,${(a * 0.72).toFixed(2)})`);
-        hg.addColorStop(0.45,`rgba(255,115,0,${(a * 0.28).toFixed(2)})`);
-        hg.addColorStop(1,   'rgba(0,0,0,0)');
-        ctx.beginPath(); ctx.arc(e.x, e.y, hr, 0, Math.PI * 2);
-        ctx.fillStyle = hg; ctx.fill();
+        ctx.drawImage(emberSprite, e.x - hr, e.y - hr, hr * 2, hr * 2);
       }
-      const rg = Math.floor(120 + Math.random() * 100);
-      ctx.beginPath(); ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,${rg},15,${a.toFixed(2)})`;
+      
+      // Centro de chispa sólido
+      ctx.beginPath(); 
+      ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,${e.colorRg},15,${a.toFixed(2)})`;
       ctx.fill();
     };
 
@@ -125,6 +156,9 @@ const FireCanvas = () => {
       animationFrameId = requestAnimationFrame(tick);
       t += 0.016; eTimer += 0.016;
       const W = canvas.width, H = canvas.height;
+      
+      // Restaurar alpha para limpieza
+      ctx.globalAlpha = 1;
       ctx.clearRect(0, 0, W, H);
 
       for (let s = 0; s < sources.length; s++) {
@@ -133,7 +167,6 @@ const FireCanvas = () => {
         const intensity = src.base * flicker;
         const x = src.frac * W;
 
-        // Aquí aplicamos el SPAWN_RATE optimizado
         if (Math.random() < src.sr * intensity * SPAWN_RATE) {
           flames.push(mkFlame(x, H, intensity));
           if (Math.random() < 0.48) flames.push(mkFlame(x + (Math.random()-0.5)*55, H, intensity * 0.62));
@@ -145,7 +178,6 @@ const FireCanvas = () => {
         }
       }
 
-      // Menos chispas aleatorias en móviles
       if (Math.random() < (isMobile ? 0.15 : 0.40)) embers.push(mkEmber(Math.random() * W, H * 0.52 + Math.random() * H * 0.44));
       if (eTimer > 0.065) eTimer = 0;
 
@@ -172,7 +204,6 @@ const FireCanvas = () => {
 
       ctx.globalCompositeOperation = 'source-over';
       
-      // Aplicamos los límites optimizados
       if (flames.length > MAX_FLAMES) flames.splice(0, flames.length - MAX_FLAMES);
       if (embers.length > MAX_EMBERS)  embers.splice(0, embers.length - MAX_EMBERS);
     };
