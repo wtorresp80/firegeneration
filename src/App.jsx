@@ -317,11 +317,7 @@ export default function App() {
             FIRE<br />GENERATION
           </h1>
           
-          <p className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-[#4A90E2] font-bold mb-6">
-            Lugar de <span className="text-[#F5EFE0]">Provisión</span> y Crecimiento <span className="text-[#F5EFE0]">|</span> Iglesia Wesleyana Suba
-          </p>
-          
-          <p className="font-playfair italic text-lg md:text-2xl text-[#F5EFE0]/80 mb-10">
+          <p className="font-playfair italic text-lg md:text-2xl text-[#F5EFE0]/80 mb-10 mt-4">
             Una generación encendida por el Espíritu
           </p>
 
@@ -339,6 +335,13 @@ export default function App() {
           </a>
         </div>
         
+        {/* Texto reubicado sobre la línea donde inician las llamas */}
+        <div className="absolute bottom-6 left-0 w-full text-center z-20 px-4">
+          <p className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-[#4A90E2] font-bold">
+            Lugar de <span className="text-[#F5EFE0]">Provisión</span> y Crecimiento <span className="text-[#F5EFE0]">|</span> Iglesia Wesleyana Suba
+          </p>
+        </div>
+
         <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#0A0805] to-transparent z-10 pointer-events-none"></div>
       </section>
 
@@ -473,11 +476,22 @@ export default function App() {
             </a>
           </div>
 
+          {/* BOTONES DE REDES SOCIALES ACTUALIZADOS */}
           <div className="flex flex-wrap justify-center items-center gap-4">
-            <a href="#" className="flex items-center gap-2 px-6 py-3 bg-[#FF6B00] text-white border border-[#FF6B00] hover:bg-[#CC2200] transition-colors rounded-sm text-sm font-bold tracking-wider uppercase shadow-lg">
+            <a 
+              href="https://wa.me/573204700154" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-6 py-3 bg-[#FF6B00] text-white border border-[#FF6B00] hover:bg-[#CC2200] transition-colors rounded-sm text-sm font-bold tracking-wider uppercase shadow-lg"
+            >
               <MessageCircle size={18} /> Escríbenos por WhatsApp
             </a>
-            <a href="#" className="flex items-center gap-2 px-6 py-3 bg-transparent text-[#FFB300] border border-[#FFB300] hover:bg-[#FFB300]/10 transition-colors rounded-sm text-sm font-bold tracking-wider uppercase">
+            <a 
+              href="https://www.instagram.com/firegenerationiws?igsh=MWo1Y3VhOW1mamJmMg==" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-6 py-3 bg-transparent text-[#FFB300] border border-[#FFB300] hover:bg-[#FFB300]/10 transition-colors rounded-sm text-sm font-bold tracking-wider uppercase"
+            >
               {/* Icono de Instagram en puro SVG para evitar errores de compilación */}
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
