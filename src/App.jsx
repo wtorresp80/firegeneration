@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Clock, Mail, ExternalLink, MessageCircle, Menu, X } from 'lucide-react';
 
-// --- COMPONENTE DEL FUEGO (CANVAS) ---
+// --- COMPONENTE DEL FUEGO (CANVAS OPTIMIZADO) ---
 const FireCanvas = () => {
   const canvasRef = useRef(null);
 
@@ -23,7 +23,6 @@ const FireCanvas = () => {
     window.addEventListener('resize', resize);
 
     // --- INICIO OPTIMIZACIÓN: PRE-RENDER DE SPRITES ---
-    // En lugar de calcular gradientes frame por frame, creamos 4 "fotos" del fuego.
     const createSprite = (type) => {
       const cvs = document.createElement('canvas');
       const size = 64; 
@@ -48,7 +47,7 @@ const FireCanvas = () => {
         g.addColorStop(0, 'rgba(220,70,0,0.7)');
         g.addColorStop(0.42, 'rgba(150,18,0,0.5)');
         g.addColorStop(1, 'rgba(40,0,0,0)');
-      } else { // ember (chispa)
+      } else { 
         g.addColorStop(0, 'rgba(255,210,55,0.8)');
         g.addColorStop(0.45, 'rgba(255,115,0,0.3)');
         g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -61,7 +60,6 @@ const FireCanvas = () => {
       return cvs;
     };
 
-    // Guardamos las imágenes en memoria
     const coreSprite = createSprite('core');
     const baseSprite = createSprite('base');
     const darkSprite = createSprite('dark');
@@ -102,7 +100,7 @@ const FireCanvas = () => {
         life: 1, decay: 0.0022 + Math.random() * 0.0058,
         size: 0.7 + Math.random() * 2.3, bright: Math.random() < 0.55,
         tx: (Math.random() - 0.5) * 0.055,
-        colorRg: Math.floor(120 + Math.random() * 100) // Fijamos color para evitar calcular math.random en cada frame
+        colorRg: Math.floor(120 + Math.random() * 100) 
       };
     };
 
@@ -127,7 +125,6 @@ const FireCanvas = () => {
       const r = p.size * p.life * 1.2;
       if (r < 0.5) return;
 
-      // Se usa la imagen pre-renderizada (GPU puro, extremadamente rápido)
       ctx.globalAlpha = p.life;
       let sprite = darkSprite;
       if (p.core) sprite = coreSprite;
@@ -145,7 +142,6 @@ const FireCanvas = () => {
         ctx.drawImage(emberSprite, e.x - hr, e.y - hr, hr * 2, hr * 2);
       }
       
-      // Centro de chispa sólido
       ctx.beginPath(); 
       ctx.arc(e.x, e.y, e.size, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(255,${e.colorRg},15,${a.toFixed(2)})`;
@@ -157,7 +153,6 @@ const FireCanvas = () => {
       t += 0.016; eTimer += 0.016;
       const W = canvas.width, H = canvas.height;
       
-      // Restaurar alpha para limpieza
       ctx.globalAlpha = 1;
       ctx.clearRect(0, 0, W, H);
 
@@ -224,7 +219,7 @@ export default function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Efecto para saber si hemos bajado la página y cambiar el color del menú
+  // Efecto para menú transparente al bajar
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -233,11 +228,13 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Enlaces actualizados con toque juvenil
   const navLinks = [
     { name: 'Inicio', href: '#' },
     { name: 'Reflexión', href: '#reflexion' },
-    { name: 'Quiénes Somos', href: '#quienes-somos' },
-    { name: 'Únete', href: '#unete' },
+    { name: 'Quiénes Somos', href: '#nosotros' },
+    { name: 'Actividades', href: '#actividades' },
+    { name: 'Únete', href: '#contacto' },
   ];
 
   return (
@@ -250,17 +247,17 @@ export default function App() {
         .font-playfair { font-family: 'Playfair Display', serif; }
       `}} />
 
-      {/* Navigation */}
-      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-[#0A0805]/95 backdrop-blur-md py-4 shadow-lg border-b border-[#FFB300]/10' : 'bg-transparent py-6'}`}>
+      {/* Navigation Desktop y Botón Móvil */}
+      <nav className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-[#0A0805]/95 backdrop-blur-md py-4 shadow-lg border-b border-[#FFB300]/10' : 'bg-transparent py-6'}`}>
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <a href="#" className="font-cinzel text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#FFB300] to-[#FF6B00]">
             FIREGENERATION
           </a>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-2 lg:gap-4">
             {navLinks.map((link) => (
-              <a key={link.name} href={link.href} className="text-sm font-medium tracking-wider uppercase text-[#F5EFE0]/80 hover:text-[#FFB300] transition-colors">
+              <a key={link.name} href={link.href} className="text-xs lg:text-sm font-bold tracking-[0.15em] uppercase text-[#F5EFE0]/90 hover:text-white hover:bg-[#FF6B00]/20 px-4 py-2 rounded-full transition-all duration-300">
                 {link.name}
               </a>
             ))}
@@ -271,26 +268,39 @@ export default function App() {
             className="md:hidden text-[#FFB300] focus:outline-none"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            <Menu size={28} />
           </button>
         </div>
+      </nav>
 
-        {/* Mobile Menu Dropdown */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-[#0A0805]/95 backdrop-blur-md border-b border-[#FFB300]/10 py-4 px-6 flex flex-col gap-4 shadow-2xl">
+      {/* Menú Móvil Desplegable (Estilo Pantalla Completa Oscura) */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed top-0 left-0 w-full h-screen bg-[#0A0805] z-50 flex flex-col pt-6 px-6">
+          <div className="flex justify-between items-center mb-12">
+            <span className="font-cinzel text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#FFB300] to-[#FF6B00]">
+              FIREGENERATION
+            </span>
+            <button className="text-[#FFB300] focus:outline-none" onClick={() => setIsMobileMenuOpen(false)}>
+              <X size={28} />
+            </button>
+          </div>
+          <div className="flex flex-col gap-6">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                className="text-base font-medium tracking-wider uppercase text-[#F5EFE0]/90 hover:text-[#FFB300] transition-colors py-2"
+                className="text-base font-bold tracking-[0.15em] uppercase text-[#F5EFE0]/90 hover:text-[#FFB300] hover:translate-x-2 transition-all pb-4 border-b border-white/10"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {link.name}
               </a>
             ))}
+            <a href="https://wesleyansuba.org" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-bold tracking-[0.15em] text-[#4A90E2] mt-2 hover:text-[#FFB300] transition-colors">
+              wesleyansuba.org <ExternalLink size={16} />
+            </a>
           </div>
-        )}
-      </nav>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-12 px-4 overflow-hidden">
@@ -361,8 +371,8 @@ export default function App() {
         </div>
       </section>
 
-      {/* Quiénes Somos Section */}
-      <section id="quienes-somos" className="py-24 px-6 bg-[#0A0805]">
+      {/* Nosotros Section */}
+      <section id="nosotros" className="py-24 px-6 bg-[#0A0805]">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-xs tracking-[0.3em] uppercase text-[#FF6B00] font-bold mb-3">Quiénes Somos</p>
           <h2 className="font-cinzel text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#FFB300] to-[#FF6B00] mb-8">Una Generación</h2>
@@ -372,10 +382,77 @@ export default function App() {
         </div>
       </section>
 
-      {/* Únete Section */}
-      <section id="unete" className="py-24 px-6 bg-gradient-to-b from-[#150F07] to-[#0A0805] border-t border-[#FFB300]/10">
+      {/* Actividades Section (Restaurada desde imagen) */}
+      <section id="actividades" className="py-24 px-6 bg-gradient-to-b from-[#0A0805] to-[#150F07]">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-xs tracking-[0.3em] uppercase text-[#FF6B00] font-bold mb-3">Calendario</p>
+          <h2 className="font-cinzel text-3xl md:text-5xl font-bold text-[#FFB300] mb-6">Actividades</h2>
+          <div className="w-16 h-1 bg-[#FF6B00] mb-12"></div>
+
+          <div className="flex flex-col gap-8 md:gap-10">
+            {/* Actividad 1 */}
+            <div className="flex gap-6 items-start border-b border-white/5 pb-8">
+              <div className="flex-shrink-0 bg-[#120A02] border border-[#FF6B00]/20 rounded-md p-4 text-center w-24">
+                <p className="text-[10px] tracking-widest uppercase text-[#FFB300] mb-2 font-bold">Sáb</p>
+                <p className="font-cinzel text-xl font-bold text-[#FF6B00] leading-tight">CADA<br/>SEM</p>
+              </div>
+              <div className="pt-1">
+                <h3 className="font-cinzel text-xl md:text-2xl text-[#FFB300] mb-3 font-bold">Reunión de Jóvenes</h3>
+                <p className="text-[#F5EFE0]/70 text-sm md:text-base leading-relaxed">
+                  Nuestro encuentro semanal — adoración, Palabra y comunidad. El lugar donde el fuego se renueva. <span className="text-[#FFB300] font-medium block md:inline mt-1 md:mt-0">5:00 pm</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Actividad 2 */}
+            <div className="flex gap-6 items-start border-b border-white/5 pb-8">
+              <div className="flex-shrink-0 bg-[#120A02] border border-[#FF6B00]/20 rounded-md p-4 text-center w-24">
+                <p className="text-[10px] tracking-widest uppercase text-[#FFB300] mb-2 font-bold">Dom</p>
+                <p className="font-cinzel text-xl font-bold text-[#FF6B00] leading-tight">CADA<br/>SEM</p>
+              </div>
+              <div className="pt-1">
+                <h3 className="font-cinzel text-xl md:text-2xl text-[#FFB300] mb-3 font-bold">Culto Dominical</h3>
+                <p className="text-[#F5EFE0]/70 text-sm md:text-base leading-relaxed">
+                  Acompáñanos en el culto principal de la Iglesia Wesleyana Suba. <span className="text-[#FFB300] font-medium block md:inline mt-1 md:mt-0">7:00 am y 10:30 am</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Actividad 3 */}
+            <div className="flex gap-6 items-start border-b border-white/5 pb-8">
+              <div className="flex-shrink-0 bg-[#120A02] border border-[#FF6B00]/20 rounded-md p-4 text-center w-24">
+                <p className="text-[10px] tracking-widest uppercase text-[#FFB300] mb-2 font-bold">Mar</p>
+                <p className="font-cinzel text-xl font-bold text-[#FF6B00] leading-tight">CADA<br/>SEM</p>
+              </div>
+              <div className="pt-1">
+                <h3 className="font-cinzel text-xl md:text-2xl text-[#FFB300] mb-3 font-bold">Noche de Alabanza</h3>
+                <p className="text-[#F5EFE0]/70 text-sm md:text-base leading-relaxed">
+                  Una noche especial de adoración y fuego. Invita a tus amigos. <span className="text-[#FFB300] font-medium block md:inline mt-1 md:mt-0">6:30 pm</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Actividad 4 */}
+            <div className="flex gap-6 items-start">
+              <div className="flex-shrink-0 bg-[#120A02] border border-[#FF6B00]/20 rounded-md p-4 text-center w-24">
+                <p className="text-[10px] tracking-widest uppercase text-[#FFB300] mb-2 font-bold">Jue</p>
+                <p className="font-cinzel text-xl font-bold text-[#FF6B00] leading-tight">CADA<br/>SEM</p>
+              </div>
+              <div className="pt-1">
+                <h3 className="font-cinzel text-xl md:text-2xl text-[#FFB300] mb-3 font-bold">Noche de Oración</h3>
+                <p className="text-[#F5EFE0]/70 text-sm md:text-base leading-relaxed">
+                  Un tiempo dedicado a la intercesión y la comunión espiritual. <span className="text-[#FFB300] font-medium block md:inline mt-1 md:mt-0">6:30 pm</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contacto Section */}
+      <section id="contacto" className="py-24 px-6 bg-gradient-to-b from-[#150F07] to-[#0A0805] border-t border-[#FFB300]/10">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs tracking-[0.3em] uppercase text-[#FF6B00] font-bold mb-3">Únete</p>
+          <p className="text-xs tracking-[0.3em] uppercase text-[#FF6B00] font-bold mb-3">Contacto</p>
           <h2 className="font-cinzel text-3xl md:text-4xl font-bold text-[#FFB300] mb-8">¿Listo para encenderte?</h2>
           <p className="text-[#F5EFE0]/80 mb-12">
             Si eres joven y quieres ser parte de una comunidad que te desafíe a crecer, te esperamos. Escríbenos o visítanos el próximo sábado.
@@ -401,6 +478,7 @@ export default function App() {
               <MessageCircle size={18} /> Escríbenos por WhatsApp
             </a>
             <a href="#" className="flex items-center gap-2 px-6 py-3 bg-transparent text-[#FFB300] border border-[#FFB300] hover:bg-[#FFB300]/10 transition-colors rounded-sm text-sm font-bold tracking-wider uppercase">
+              {/* Icono de Instagram en puro SVG para evitar errores de compilación */}
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
@@ -418,8 +496,8 @@ export default function App() {
         <p className="text-[10px] tracking-[0.1em] uppercase text-[#4A90E2] font-bold mb-6">
           Lugar de Provisión y Crecimiento · Iglesia Wesleyana Suba
         </p>
-        <a href="#" className="inline-flex items-center gap-2 text-[#F5EFE0]/60 hover:text-[#FFB300] transition-colors text-sm mb-8">
-          Visita el sitio principal de la iglesia <ExternalLink size={14} />
+        <a href="https://wesleyansuba.org" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[#4A90E2] hover:text-[#FFB300] transition-colors text-sm mb-8 font-bold tracking-[0.1em]">
+          wesleyansuba.org <ExternalLink size={14} />
         </a>
         <div className="text-[#F5EFE0]/40 text-xs">
           <p className="mb-2">BOGOTÁ, COLOMBIA</p>
