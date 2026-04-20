@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Clock, Mail, ExternalLink, MessageCircle } from 'lucide-react';
+import { MapPin, Clock, Mail, ExternalLink, MessageCircle, Menu, X } from 'lucide-react';
 
 // --- COMPONENTE DEL FUEGO (CANVAS) ---
 const FireCanvas = () => {
@@ -221,9 +221,77 @@ const FireCanvas = () => {
 
 // --- APLICACIÓN PRINCIPAL ---
 export default function App() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Efecto para saber si hemos bajado la página y cambiar el color del menú
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navLinks = [
+    { name: 'Inicio', href: '#' },
+    { name: 'Reflexión', href: '#reflexion' },
+    { name: 'Quiénes Somos', href: '#quienes-somos' },
+    { name: 'Únete', href: '#unete' },
+  ];
+
   return (
     <div className="min-h-screen bg-[#0A0805] text-[#F5EFE0] font-sans selection:bg-[#FF6B00]/30 overflow-x-hidden">
       
+      {/* Importación de fuentes caligráficas */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
+      `}} />
+
+      {/* Navigation */}
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-[#0A0805]/95 backdrop-blur-md py-4 shadow-lg border-b border-[#FFB300]/10' : 'bg-transparent py-6'}`}>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <a href="#" className="font-cinzel text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#FFB300] to-[#FF6B00]">
+            FIREGENERATION
+          </a>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <a key={link.name} href={link.href} className="text-sm font-medium tracking-wider uppercase text-[#F5EFE0]/80 hover:text-[#FFB300] transition-colors">
+                {link.name}
+              </a>
+            ))}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden text-[#FFB300] focus:outline-none"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 w-full bg-[#0A0805]/95 backdrop-blur-md border-b border-[#FFB300]/10 py-4 px-6 flex flex-col gap-4 shadow-2xl">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-base font-medium tracking-wider uppercase text-[#F5EFE0]/90 hover:text-[#FFB300] transition-colors py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {link.name}
+              </a>
+            ))}
+          </div>
+        )}
+      </nav>
+
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-12 px-4 overflow-hidden">
         <FireCanvas />
@@ -294,7 +362,7 @@ export default function App() {
       </section>
 
       {/* Quiénes Somos Section */}
-      <section className="py-24 px-6 bg-[#0A0805]">
+      <section id="quienes-somos" className="py-24 px-6 bg-[#0A0805]">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-xs tracking-[0.3em] uppercase text-[#FF6B00] font-bold mb-3">Quiénes Somos</p>
           <h2 className="font-cinzel text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#FFB300] to-[#FF6B00] mb-8">Una Generación</h2>
@@ -305,7 +373,7 @@ export default function App() {
       </section>
 
       {/* Únete Section */}
-      <section className="py-24 px-6 bg-gradient-to-b from-[#150F07] to-[#0A0805] border-t border-[#FFB300]/10">
+      <section id="unete" className="py-24 px-6 bg-gradient-to-b from-[#150F07] to-[#0A0805] border-t border-[#FFB300]/10">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs tracking-[0.3em] uppercase text-[#FF6B00] font-bold mb-3">Únete</p>
           <h2 className="font-cinzel text-3xl md:text-4xl font-bold text-[#FFB300] mb-8">¿Listo para encenderte?</h2>
