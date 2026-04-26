@@ -604,8 +604,8 @@ export default function App() {
           <p>© 2026 FireGeneration — Todos los derechos reservados.</p>
           <div className="hidden md:flex text-[#F5EFE0]/20">|</div>
           <div className="flex items-center gap-4">
-            <button onClick={() => setShowPrivacyModal(true)} className="hover:text-[#FFB300] transition-colors underline underline-offset-2">Política de privacidad</button>
-            <button onClick={() => setShowPrivacyModal(true)} className="hover:text-[#FFB300] transition-colors underline underline-offset-2">Cookies</button>
+            <button onClick={() => setShowPrivacyModal(true)} className="hover:text-[#FFB300] transition-colors underline underline-offset-2 bg-transparent border-none cursor-pointer">Política de privacidad</button>
+            <button onClick={() => setShowPrivacyModal(true)} className="hover:text-[#FFB300] transition-colors underline underline-offset-2 bg-transparent border-none cursor-pointer">Cookies</button>
           </div>
         </div>
       </footer>
@@ -625,13 +625,13 @@ export default function App() {
           <div className="flex items-center gap-4 shrink-0 w-full lg:w-auto justify-end">
             <button 
               onClick={() => setShowPrivacyModal(true)} 
-              className="px-5 py-[0.6rem] border border-[#F5EFE0]/20 text-[#F5EFE0]/80 text-[0.75rem] tracking-wider uppercase font-bold rounded-sm hover:bg-white/5 hover:border-[#F5EFE0]/50 transition-all"
+              className="px-5 py-[0.6rem] border border-[#F5EFE0]/20 text-[#F5EFE0]/80 text-[0.75rem] tracking-wider uppercase font-bold rounded-sm hover:bg-white/5 hover:border-[#F5EFE0]/50 transition-all bg-transparent"
             >
               Política
             </button>
             <button 
               onClick={acceptCookies} 
-              className="px-8 py-[0.6rem] text-white text-[0.75rem] tracking-wider uppercase font-bold rounded-sm shadow-lg hover:scale-95 transition-transform" 
+              className="px-8 py-[0.6rem] text-white text-[0.75rem] tracking-wider uppercase font-bold rounded-sm shadow-lg hover:scale-95 transition-transform border-none cursor-pointer" 
               style={{ background: 'linear-gradient(135deg, #FF6B00, #CC2200)' }}
             >
               Aceptar
@@ -677,7 +677,7 @@ export default function App() {
             <div className="mt-10 text-center">
               <button 
                 onClick={() => setShowPrivacyModal(false)} 
-                className="px-10 py-3 text-white text-[0.8rem] tracking-widest uppercase font-bold rounded-sm shadow-lg hover:scale-95 transition-transform inline-block" 
+                className="px-10 py-3 text-white text-[0.8rem] tracking-widest uppercase font-bold rounded-sm shadow-lg hover:scale-95 transition-transform inline-block border-none cursor-pointer" 
                 style={{ background: 'linear-gradient(135deg, #FF6B00, #CC2200)' }}
               >
                 Cerrar y Volver
